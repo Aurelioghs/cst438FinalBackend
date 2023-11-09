@@ -10,40 +10,43 @@ import javax.persistence.JoinColumn;
 
 @Entity
 @Table(name = "coords")
-public class coords {
+public class Coords {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private int coord_id;
     @OneToOne
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     private User user;
-    private float lat;
-    private float lon;
+    private double lat;
+    private double lon;
     
-	public Long getId() {
-		return id;
-	}
-	public void setId(Long id) {
-		this.id = id;
-	}
+
 	public User getUser() {
 		return user;
 	}
 	public void setUser(User user) {
 		this.user = user;
 	}
-	public float getLat() {
+	public double getLat() {
 		return lat;
 	}
-	public void setLat(float lat) {
+	public void setLat(double lat) {
 		this.lat = lat;
 	}
-	public float getLon() {
+	public double getLon() {
 		return lon;
 	}
-	public void setLon(float lon) {
+	public void setLon(double lon) {
 		this.lon = lon;
 	}
+	@Override
+	public String toString() {
+		return "Coords [coord_id=" + coord_id + ", user=" + user + ", lat=" + lat + ", lon=" + lon + "]";
+	}
+	
+
+	
+	
     
     
 }

@@ -9,14 +9,20 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.cst438</groupId>
-	<artifactId>MultiplyGame1</artifactId>
+	<artifactId>FinalProject</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>MultiplyGame1</name>
+	<name>FinalProject</name>
 	<description>Demo multiply game</description>
 	<properties>
 		<java.version>17</java.version>
 	</properties>
 	<dependencies>
+		<dependency>
+    <groupId>org.json</groupId>
+    <artifactId>json</artifactId>
+    <version>20231013</version>
+</dependency>
+		
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>

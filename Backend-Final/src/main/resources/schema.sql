@@ -9,11 +9,11 @@ create table user_table (
 	countrycode varchar(2)
 );
 
-create table coords(
-id identity primary key,
-lat FLOAT,
-lon FLOAT
+CREATE TABLE coords (
+    coord_id int NOT NULL AUTO_INCREMENT,
+    user_id int NOT NULL,
+    lat FLOAT NOT NULL,
+    lon FLOAT NOT NULL,
+    PRIMARY KEY (coord_id),
+    FOREIGN KEY (user_id) REFERENCES user_table (id) ON DELETE CASCADE
 );
-
-
-
