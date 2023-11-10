@@ -28,7 +28,7 @@ import com.cst438.domain.User;
 import com.cst438.domain.CoordsRepository;
 import com.cst438.domain.UserRepository;
 import com.cst438.dto.UserDTO;
-import com.cst438.dto.addressDTO;
+import com.cst438.dto.*;
 
 @RestController
 public class UserController {
@@ -48,7 +48,7 @@ public class UserController {
 			message+=(user.toString());
 			message+=("\n");
 	    }
-	    // Return the StringBuilder content as a String in the ResponseEntity
+	  
 	    return ResponseEntity.ok(message.toString());
 	}
 	@PostMapping("/signup")
@@ -150,10 +150,50 @@ public class UserController {
         return ResponseEntity.ok(message);
         //Maybe add exception handling for when a user couldnt sign up for some reason. Email should be unique, maybe check for that somewhere here
 	}
-	
-	@GetMapping("/getWeather")
+	@GetMapping("/getweather/{city}")//Weather user sees based on their search
 	@CrossOrigin 
-	public  ResponseEntity<Map<String, Object>> getWeather(Principal user) {
+	public  ResponseEntity<Map<String, Object>> getCityWeather(@PathVariable String city) {
+		String apiKey = "3c68fedb4d4cc2ee43ad218fedc95ec9";
+		String geoCodeEndpoint = "http://api.openweathermap.org/geo/1.0/direct?q=%s&appid=%s";
+		String geoUrl = String.format(geoCodeEndpoint, city, apiKey);
+		System.out.println("URL: "+ geoUrl);
+		RestTemplate restTemplate = new RestTemplate();
+		ResponseEntity<String> response = restTemplate.getForEntity(geoUrl, String.class);
+		String responseBody = response.getBody();
+	    responseBody = responseBody.substring(1, responseBody.length() - 1);
+		System.out.println("Response Body: " + responseBody);
+		JSONObject jo =new JSONObject(responseBody);
+		double lat = jo.getDouble("lat");
+		double lon = jo.getDouble("lon");
+		String coords = String.format("lat %f  lon %f", lat, lon); 
+		
+		System.out.println(coords);
+	 	String oneCallAPIEndpoint = "https://api.openweathermap.org/data/3.0/onecall?lat=%s&lon=%s&appid=%s";
+      	String oneCallUrl = String.format(oneCallAPIEndpoint, String.valueOf(lat), String.valueOf(lon), apiKey);
+
+      	restTemplate = new RestTemplate();
+      	response  = restTemplate.getForEntity(oneCallUrl, String.class);
+     	System.out.println(response.getBody());
+     	JSONObject weather = new JSONObject(response.getBody());
+ 
+    	double Kelvin = weather.getJSONObject("current").getDouble("temp");
+    	double Celsius = Kelvin - 273.15;
+    	double  Fahrenheit = (Kelvin - 273.15) * 9/5 + 32;
+    	System.out.println(String.format("F: %f.  C:%s" ,Fahrenheit,Celsius));
+    	
+    	String desc= weather.getJSONObject("current").getJSONArray("weather").getJSONObject(0).getString("description");
+    	System.out.println("Description: " + desc);
+    	
+    	double  windSpeed=  weather.getJSONObject("current").getDouble("wind_speed");
+    	System.out.println(String.format("WindSpeed:%f ", windSpeed));
+		return null;
+		
+		
+	}
+	
+	@GetMapping("/getUserWeather")//Default weather user sees based on their address
+	@CrossOrigin 
+	public  ResponseEntity<Map<String, Object>> getUserWeather(Principal user) {
 		//Use the principal to get user email, in order to use in findByEmail(), however principal might be null as of now.
 		//Right now this mapping works due to permitAll(), it will prob fail if we use .authenticated() or hasAnyRole()
 		
@@ -165,13 +205,52 @@ public class UserController {
       	RestTemplate restTemplate = new RestTemplate();
       	ResponseEntity<String> response  = restTemplate.getForEntity(oneCallUrl, String.class);*/
 		
-		 Map<String, Object> responseBody = new HashMap<>();
-		 //responseBody.put("temperature", String.valueOf(temperature)); 
-		 //responseBody.put("windSpeed", String.valueOf(windSpeed)); 
-		 //responseBody.put("description", description); 
-
-		  return ResponseEntity.ok(responseBody);//Maybe alter the returns
-      	
+		 /*Map<String, Object> response = new LinkedHashMap<>();
+		    response.put("tempF",Farhrenheit);
+		    response.put("tempC", Celsius);
+		    response.put("desc", desc);
+		    response.put("windSpeed",windSpeed);
+		return ResponseEntity.ok(response);*///Not sure if we should return response entity or just DTO
+		return null;
+  
+	}
+	@GetMapping("/getWeathers")//default cities for user to view weathers of
+	@CrossOrigin 
+	public void getWeathers() {
+		String apiKey = "3c68fedb4d4cc2ee43ad218fedc95ec9";//kens key?
+		String geoCode = "http://api.openweathermap.org/geo/1.0/direct?q={city name},{state code},{country code}&limit={limit}&appid={API key}";
+		String geoCodeEndpoint = "http://api.openweathermap.org/geo/1.0/direct?q=%s,%s&appid=%s";		
+		 Map<String, String> cityMap = new HashMap<>();
+	        cityMap.put("Paris", "FR");
+	        cityMap.put("New York", "US");
+	        cityMap.put("London", "GB");
+	        cityMap.put("Tokyo", "JP");
+	        cityMap.put("Sydney", "AU");
+	        cityMap.put("Rome", "IT");
+	        cityMap.put("Cairo", "EG");
+	        cityMap.put("Moscow", "RU");
+	        int k =0;
+	        for (Map.Entry<String, String> entry : cityMap.entrySet()) {
+	            System.out.println("City: " + entry.getKey() + ", Country Code: " + entry.getValue());
+	            String cityName = entry.getKey();
+	    		String countryCode= entry.getValue();
+	    
+	    		String geoUrl = String.format(geoCodeEndpoint, cityName,  countryCode, apiKey);
+	    		System.out.println("URL: "+geoUrl);
+	    		RestTemplate restTemplate = new RestTemplate();
+	    		ResponseEntity<String> response = restTemplate.getForEntity(geoUrl, String.class);
+	    		JSONArray data =new JSONArray(response.getBody());
+	    		double lat =data.getJSONObject(0).getDouble("lat");
+	    		double lon = data.getJSONObject(0).getDouble("lon");
+	    		String coords = String.format("lat %f  lon %f", lat, lon); 
+	    		System.out.println(coords);
+	    		//maybe use the coords here to store in a new table, which will then be used instead for weather api to reduce halve the calls
+	    		
+	        }
+	        
+		
+	
+		//System.out.println(response.getStatusCode());
 	}
 	
 }

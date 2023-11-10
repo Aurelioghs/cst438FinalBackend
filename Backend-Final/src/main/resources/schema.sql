@@ -17,3 +17,4 @@ CREATE TABLE coords (
     PRIMARY KEY (coord_id),
     FOREIGN KEY (user_id) REFERENCES user_table (id) ON DELETE CASCADE
 );
+
