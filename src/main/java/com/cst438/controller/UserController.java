@@ -15,8 +15,10 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
+import com.cst438.domain.Coordinate;
 import com.cst438.domain.CoordinateRepository;
 import com.cst438.domain.User;
 import com.cst438.domain.UserRepository;
@@ -35,7 +37,7 @@ public class UserController {
 	// add a user
 	// get a user by email
 	// get list of all users
-	//
+	// get list of all coordinates
 	
 	// Adds a student
 	@PostMapping("/user")
@@ -75,9 +77,21 @@ public class UserController {
 		ResponseEntity<String> response = restTemplate.getForEntity(geoUrl, String.class);
 		String responseBody = response.getBody();
 		System.out.println("Response Body: " + responseBody);
-//		JSONObject jo = new JSONObject(responseBody);
-//		double lat = jo.getDouble("lat");
-//		double lon = jo.getDouble("lon");
+		
+		// Get lat and lon from JSON Object
+		JSONArray jsonArray = new JSONArray(responseBody);
+		JSONObject jo = jsonArray.getJSONObject(0);
+		float lat = jo.getFloat("lat");
+        float lon = jo.getFloat("lon");
+
+        System.out.println("Latitude: " + lat);
+        System.out.println("Longitude: " + lon);
+        
+        Coordinate location = new Coordinate();
+		location.setUser(newUser);
+		location.setLon(lon);
+		location.setLat(lat);
+		coordinateRepository.save(location);
 		return true;
 	}
 	
@@ -93,5 +107,12 @@ public class UserController {
     public List<User> getAllUsers() {
         List<User> users = (List<User>) userRepository.findAll();
         return users;
+    }
+	
+	// Get List of Coordinates
+	@GetMapping("/coords")
+    public List<Coordinate> getAllCoordinates() {
+        List<Coordinate> coordinates = (List<Coordinate>) coordinateRepository.findAll();
+	    return coordinates;
     }
 }
