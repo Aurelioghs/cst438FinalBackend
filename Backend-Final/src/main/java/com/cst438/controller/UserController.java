@@ -23,6 +23,9 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
 import org.json.*;
+
+import com.cst438.domain.Cities;
+import com.cst438.domain.CitiesRepository;
 import com.cst438.domain.Coords;
 import com.cst438.domain.User;
 import com.cst438.domain.CoordsRepository;
@@ -37,8 +40,21 @@ public class UserController {
 	UserRepository userRepository;
 	@Autowired 
 	CoordsRepository  coordsRepository;
+	@Autowired
+	CitiesRepository citiesRepository;
+	@GetMapping("/getcities")
+	public ResponseEntity<?> getAllCities() {
+	      Iterable<Cities> cities = citiesRepository.findAll();
+	      String message ="";
+	      for (Cities city :cities) {
+	    		message+=(city.toString());
+				message+=("\n");
+	      }
+	      return ResponseEntity.ok(message.toString());
+	 }
 	
-	@GetMapping("/get")
+	  
+	@GetMapping("/get")//get users to confirm sign up
 	@CrossOrigin 
 	public ResponseEntity<?> getAll() {
 		Iterable<User> users = userRepository.findAll();
@@ -231,20 +247,20 @@ public class UserController {
 	        cityMap.put("Moscow", "RU");
 	        int k =0;
 	        for (Map.Entry<String, String> entry : cityMap.entrySet()) {
-	            System.out.println("City: " + entry.getKey() + ", Country Code: " + entry.getValue());
+	           // System.out.println("City: " + entry.getKey() + ", Country Code: " + entry.getValue());
 	            String cityName = entry.getKey();
 	    		String countryCode= entry.getValue();
 	    
 	    		String geoUrl = String.format(geoCodeEndpoint, cityName,  countryCode, apiKey);
-	    		System.out.println("URL: "+geoUrl);
+	    		//System.out.println("URL: "+geoUrl);
 	    		RestTemplate restTemplate = new RestTemplate();
 	    		ResponseEntity<String> response = restTemplate.getForEntity(geoUrl, String.class);
 	    		JSONArray data =new JSONArray(response.getBody());
 	    		double lat =data.getJSONObject(0).getDouble("lat");
 	    		double lon = data.getJSONObject(0).getDouble("lon");
-	    		String coords = String.format("lat %f  lon %f", lat, lon); 
+	    		String coords = String.format("%s, %s,:lat %f  lon %f",entry.getKey(),entry.getValue(), lat, lon); 
 	    		System.out.println(coords);
-	    		//maybe use the coords here to store in a new table, which will then be used instead for weather api to reduce halve the calls
+	    		//maybe use the coords here to store in a new table, which will then be used instead inside the weather api to halve the api calls
 	    		
 	        }
 	        

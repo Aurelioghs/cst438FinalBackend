@@ -18,3 +18,10 @@ CREATE TABLE coords (
     FOREIGN KEY (user_id) REFERENCES user_table (id) ON DELETE CASCADE
 );
 
+CREATE TABLE cities (
+ 	city_id INT PRIMARY KEY AUTO_INCREMENT,
+    city_name VARCHAR(255),
+    country_code CHAR(2),
+    latitude FLOAT,
+    longitude FLOAT
+);
