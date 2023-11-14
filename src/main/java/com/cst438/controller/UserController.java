@@ -39,10 +39,10 @@ public class UserController {
 	// get list of all users
 	// get list of all coordinates
 	
-	// Adds a student
+	// Adds a user
 	@PostMapping("/user")
 	@Transactional
-	public boolean addUsesr( @RequestBody UserDTO userDto ) {
+	public boolean addUser( @RequestBody UserDTO userDto ) {
 		User user = userRepository.findByEmail(userDto.email());
 		if(user != null) {
 			// User is already in system
