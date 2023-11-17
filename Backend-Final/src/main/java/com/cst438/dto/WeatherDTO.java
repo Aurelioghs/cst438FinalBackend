@@ -1,4 +1,4 @@
 package com.cst438.dto;
 
-public record WeatherDTO(double tempF,double tempC,String desc,double windSpeed) {
+public record WeatherDTO(int tempF,int tempC,String desc,int windSpeed){//maybe add more data 
 }
