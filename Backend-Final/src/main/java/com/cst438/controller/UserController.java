@@ -9,6 +9,7 @@ import org.asynchttpclient.util.Assertions;
 import org.openqa.selenium.remote.http.HttpMethod;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.jackson.JsonObjectSerializer;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpHeaders;
@@ -105,7 +106,13 @@ public class UserController {
 				newUser.getCity(), newUser.getStateCode(), newUser.getCountryCode());
 		
 		System.out.println(userDTO);
-		userRepository.save(newUser);
+		try {
+		    userRepository.save(newUser);
+		    // other code if the save is successful
+		} catch (DataIntegrityViolationException ex) {
+		    String errorMessage = "User with the same name already exists.";
+		    return ResponseEntity.status(HttpStatus.CONFLICT).body(errorMessage);
+		}
 		newUser = userRepository.findByEmail(user.email());
 		if (newUser!= null) {
 			System.out.println("WORKED");
@@ -148,10 +155,9 @@ public class UserController {
 			System.out.println("HERE ARE THE COORDS: "+loc.toString());
 		}
 		
-		List<Coords> userCoords = coordsRepository.findByUserId(newUser.getId());
-		for(Coords coordsOfUser:userCoords) {
-			System.out.println("USERS COORDS: "+coordsOfUser.toString());
-		}
+		Coords userCoords = coordsRepository.findByUserId(newUser.getId());
+		System.out.println("USERS COORDS: "+userCoords.toString());
+		
 	
     	String message = "User signed up successfully";
         //return ResponseEntity.ok(message);
@@ -178,7 +184,7 @@ public class UserController {
 		System.out.println(coords);
 	 	String oneCallAPIEndpoint = "https://api.openweathermap.org/data/3.0/onecall?lat=%s&lon=%s&appid=%s";
       	String oneCallUrl = String.format(oneCallAPIEndpoint, String.valueOf(lat), String.valueOf(lon), apiKey);
-
+    	System.out.println(oneCallUrl);
       	restTemplate = new RestTemplate();
       	response  = restTemplate.getForEntity(oneCallUrl, String.class);
      	System.out.println(response.getBody());
@@ -194,30 +200,45 @@ public class UserController {
     	
     	int windSpeed= (int) Math.round(weather.getJSONObject("current").getDouble("wind_speed"));
     	System.out.println(String.format("WindSpeed:%d ", windSpeed));
-    	WeatherDTO weatherdto = new WeatherDTO(Fahrenheit,Celsius,desc,windSpeed);
+    	WeatherDTO weatherdto = new WeatherDTO(city,Fahrenheit,Celsius,desc,windSpeed);
     	String message ="";	
     	message +=String.format("Weather for %s. F: %d. C:%d." ,city,Fahrenheit,Celsius);
     	message +=String.format("Description:%s. Wind Speed:%d.\n",desc,windSpeed );
     	
 		//return weatherdto;
-    	return ResponseEntity.ok(message);
+    	return ResponseEntity.ok(weatherdto);
 	}
 	
 	@GetMapping("/getuserweather")//Default weather user sees based on their address
 	@CrossOrigin 
-	public  ResponseEntity<?> getUserWeather(Principal user) {
+	public ResponseEntity<WeatherDTO> getUserWeather(Principal user) {
+		double lat = 0;
+		double lon = 0;
+		 User currentUser = null;
+		if (user != null) {
+			System.out.println("USER IS AUTH");
+	        String username = user.getName();
+	        currentUser = userRepository.findByName(username);//username also has unique constraint like email
+	        Coords coords =  coordsRepository.findByUserId(currentUser.getId());
+	        lat = coords.getLat();
+	        lon = coords.getLon();
+	        System.out.println(coords.toString());
+	        
+		}
+		else {
+			System.out.println("USER IS NULL");
+		}
 		//Use the principal to get user email, in order to use in findByEmail(), however principal might be null as of now.
 		//Right now this mapping works due to permitAll(), it will prob fail if we use .authenticated() or hasAnyRole()
-		
-		
-	/*	//The coords are saved, the below call should be made in getWeather. This was testing to see if it works
+		String apiKey = "3c68fedb4d4cc2ee43ad218fedc95ec9";
 		String weatherAPI = "https://api.openweathermap.org/data/3.0/onecall?lat={lat}&lon={lon}&exclude={part}&appid={API key}";
       	String oneCallAPIEndpoint = "https://api.openweathermap.org/data/3.0/onecall?lat=%s&lon=%s&appid=%s";
       	String oneCallUrl = String.format(oneCallAPIEndpoint, String.valueOf(lat), String.valueOf(lon), apiKey);
-      	System.out.println(oneCallUrl);
-      	restTemplate = new RestTemplate();
-      	response  = restTemplate.getForEntity(oneCallUrl, String.class);
-     	System.out.println(response.getBody());
+      	//System.out.println(oneCallUrl);
+      	RestTemplate restTemplate = new RestTemplate();
+		ResponseEntity<String> response = restTemplate.getForEntity(oneCallUrl, String.class);
+		String responseBody = response.getBody();
+     	System.out.println(responseBody);
      	
      	JSONObject weather = new JSONObject(response.getBody());
     	//System.out.println(weather);
@@ -225,22 +246,17 @@ public class UserController {
         //System.out.println(Kelvin);
     	int Celsius =(int) Math.round(Kelvin - 273.15);
 	    int Fahrenheit =(int) Math.round((Kelvin - 273.15) * 9/5 + 32);
-    	System.out.println(String.format("F: %f.  C:%s" ,Fahrenheit,Celsius));
+    	System.out.println(String.format("F: %d.  C:%d" ,Fahrenheit,Celsius));
     	
     	String desc= weather.getJSONObject("current").getJSONArray("weather").getJSONObject(0).getString("description");
     	System.out.println("Description: " + desc);
     	
     	int  windSpeed= (int) Math.round(weather.getJSONObject("current").getDouble("wind_speed"));
     	System.out.println(String.format("WindSpeed:%d ", windSpeed));
-    	*/
-		
-		 /*Map<String, Object> response = new LinkedHashMap<>();
-		    response.put("tempF",Farhrenheit);
-		    response.put("tempC", Celsius);
-		    response.put("desc", desc);
-		    response.put("windSpeed",windSpeed);
-		return ResponseEntity.ok(response);*///Not sure if we should return response entity or just DTO
-		return null;
+    	WeatherDTO currentWeather = new WeatherDTO(currentUser.getCity(),Fahrenheit, Celsius, desc, windSpeed);
+
+		return ResponseEntity.ok(currentWeather);
+	
   
 	}
 	@GetMapping("/getweathers")//default cities for user to view weathers of
@@ -271,7 +287,7 @@ public class UserController {
 	    	int windSpeed= (int) Math.round(weather.getJSONObject("current").getDouble("wind_speed"));
 	    	message += String.format("Weather for %s, %s. F: %d. C:%d.", city.getCityName(), city.getCountryCode(), Fahrenheit, Celsius);
 	    	message += String.format(" Description:%s. Wind Speed:%d.\n", desc, windSpeed);
-	    	weathers[i++] = new WeatherDTO(Fahrenheit, Celsius, desc, windSpeed);
+	    	weathers[i++] = new WeatherDTO(city.getCityName(),Fahrenheit, Celsius, desc, windSpeed);
 	        }
 	    	
 		return ResponseEntity.ok(weathers);
