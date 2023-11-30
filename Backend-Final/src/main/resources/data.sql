@@ -3,7 +3,12 @@ insert into user_table
 ('user','user@csumb.edu','$2a$10$NVM0n8ElaRgg7zWO1CxUdei7vWoPg91Lz2aYavh9.f9q0e4bRadue','USER','Martinez','CA','US'),
 ('admin','admin@csumb.edu','$2a$10$8cjz47bjbR4Mn8GMg9IZx.vyjhLXR/SKKMSZ9.mP9vpMu0ssKi8GW','ADMIN','Monterey','CA','US');
 
-INSERT INTO cities (city_name, country_code, latitude, longitude)
+INSERT INTO user_cities (user_id,city_name, country_code, latitude, longitude)
+VALUES 
+    (1,'Miami', 'US', 25.7742, -80.1936),
+    (2,'Seattle', 'US', 47.6038, -122.3301);
+    
+INSERT INTO default_cities (city_name, country_code, latitude, longitude)
 VALUES 
     ('New York', 'US', 40.712728, -74.006015),
     ('Rome', 'IT', 41.893320, 12.482932),

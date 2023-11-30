@@ -6,8 +6,8 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 
 @Entity
-@Table(name = "cities")
-public class Cities {
+@Table(name = "default_cities")
+public class DefaultCity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -19,11 +19,11 @@ public class Cities {
     private double longitude;
 
     // Default constructor (required by JPA)
-    public Cities() {
+    public DefaultCity() {
     }
 
     // Constructor without cityId (useful for creating instances without an ID, e.g., when inserting new records)
-    public Cities(String cityName, String countryCode, double latitude, double longitude) {
+    public DefaultCity(String cityName, String countryCode, double latitude, double longitude) {
         this.cityName = cityName;
         this.countryCode = countryCode;
         this.latitude = latitude;

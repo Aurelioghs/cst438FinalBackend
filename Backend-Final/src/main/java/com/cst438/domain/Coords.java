@@ -15,11 +15,15 @@ public class Coords {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int coord_id;
     @OneToOne
-    @JoinColumn(name = "user_id", referencedColumnName = "id")
+    @JoinColumn(name = "user_id", referencedColumnName = "user_id")
     private User user;
     private double lat;
     private double lon;
     
+    
+    public int getUserId() {
+        return user.getId();
+    }
 
 	public User getUser() {
 		return user;
