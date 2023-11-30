@@ -18,3 +18,23 @@ CREATE TABLE coords(
 	PRIMARY KEY (coord_id),
   	FOREIGN KEY (user_id) REFERENCES user_table (user_id) on delete cascade
 );
+
+CREATE TABLE default_cities (
+	city_id int NOT NULL AUTO_INCREMENT,
+	city varchar(255) NOT NULL,
+	country_code varchar(2) NOT NULL,
+	latitude FLOAT NOT NULL,
+	longitude FLOAT NOT NULL,
+	PRIMARY KEY (city_id)
+);
+
+CREATE TABLE user_cities (
+	city_id int NOT NULL AUTO_INCREMENT,
+	user_id int NOT NULL,
+	city varchar(255) NOT NULL,
+	country_code varchar(2) NOT NULL,
+	latitude FLOAT NOT NULL,
+	longitude FLOAT NOT NULL,
+	PRIMARY KEY (city_id),
+	FOREIGN KEY (user_id) REFERENCES user_table (user_id) on delete cascade
+);
