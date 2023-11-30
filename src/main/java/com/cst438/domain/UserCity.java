@@ -16,7 +16,7 @@ public class UserCity {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private int city_id;
 	private String city;
-	private String coutry_code;
+	private String country_code;
 	private float latitude;
 	private float longitude;
 	@ManyToOne(fetch=FetchType.EAGER)
@@ -49,13 +49,13 @@ public class UserCity {
 	}
 
 
-	public String getCoutry_code() {
-		return coutry_code;
+	public String getCountry_code() {
+		return country_code;
 	}
 
 
-	public void setCoutry_code(String coutry_code) {
-		this.coutry_code = coutry_code;
+	public void setCountry_code(String country_code) {
+		this.country_code = country_code;
 	}
 
 
@@ -91,7 +91,7 @@ public class UserCity {
 
 	@Override
 	public String toString() {
-		return "UserCity [city_id=" + city_id + ", city=" + city + ", coutry_code=" + coutry_code + ", latitude="
+		return "UserCity [city_id=" + city_id + ", city=" + city + ", country_code=" + country_code + ", latitude="
 				+ latitude + ", longitude=" + longitude + ", user=" + user + "]";
 	}
 	

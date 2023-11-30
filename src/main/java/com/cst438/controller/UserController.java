@@ -78,7 +78,7 @@ public class UserController {
 		
 		// Save Coordinate for user's entered home
 		String apiKey = "3c68fedb4d4cc2ee43ad218fedc95ec9"; // WeatherApp API Key
-		String geoCode = "http://api.openweathermap.org/geo/1.0/direct?q={city name},{state code},{country code}&limit={limit}&appid={API key}";
+		// String geoCode = "http://api.openweathermap.org/geo/1.0/direct?q={city name},{state code},{country code}&limit={limit}&appid={API key}";
 		String cityName = newUser.getCity();
 		String stateCode = newUser.getState_code();
 		String countryCode = newUser.getCountry_code();
@@ -162,10 +162,48 @@ public class UserController {
 			}
 		}
 		
+		// Set the user for newUserCity
+		// by getting the user based on the user_id
+		User cityUser = userRepository.findById(user_id);
+		if(cityUser == null) {
+			// if for some reason the user does not exist
+			return false;
+		}
+		
 		UserCity newUserCity = new UserCity();
+		newUserCity.setUser(cityUser);
+		newUserCity.setCity(cityDto.city());
+		newUserCity.setCountry_code(cityDto.country_code());
 		// cityDto only has the city name and the country code
 		// we will need to obtain the latitude and longitude
 		// the same way we did in the addUser method
+		String apiKey = "3c68fedb4d4cc2ee43ad218fedc95ec9"; // WeatherApp API Key
+		// String geoCode = "http://api.openweathermap.org/geo/1.0/direct?q={city name},{country code}&limit={limit}&appid={API key}";
+		String cityName = newUserCity.getCity();
+		String countryCode = newUserCity.getCountry_code();
+		String geoCodeEndpoint = "http://api.openweathermap.org/geo/1.0/direct?q=%s,%s&appid=%s";						
+		String geoUrl = String.format(geoCodeEndpoint, cityName, countryCode, apiKey);
+		
+		// Create instance of RestTemplate for the HTTP Request
+		RestTemplate restTemplate = new RestTemplate();
+		// Perform a GET request to geoUrl
+		// The response should be a String
+		ResponseEntity<String> response = restTemplate.getForEntity(geoUrl, String.class);
+		String responseBody = response.getBody();
+		System.out.println("Response Body: " + responseBody);
+				
+		// Get lat and lon from JSON Object
+		JSONArray jsonArray = new JSONArray(responseBody);
+		JSONObject jo = jsonArray.getJSONObject(0);
+		float lat = jo.getFloat("lat");
+		float lon = jo.getFloat("lon");
+		
+		// Add lat and lon to the newUserCity
+		newUserCity.setLatitude(lat);
+		newUserCity.setLongitude(lon);
+		
+		//Finally save the newUserCity to the repository
+		userCityRepository.save(newUserCity);
 		return true;
 	}
 }

@@ -8,7 +8,8 @@ INSERT INTO coords
 (1, 36.600258, -121.89464),
 (2, 38.013893, -122.133865);
 
-INSERT INTO default_cities (city, country_code, latitude, longitude) VALUES 
+INSERT INTO default_cities 
+(city, country_code, latitude, longitude) VALUES 
 ('New York', 'US', 40.712728, -74.006015),
 ('Rome', 'IT', 41.893320, 12.482932),
 ('Tokyo', 'JP', 35.682839, 139.759455),
