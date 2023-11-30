@@ -20,8 +20,13 @@ import org.json.JSONObject;
 
 import com.cst438.domain.Coordinate;
 import com.cst438.domain.CoordinateRepository;
+import com.cst438.domain.DefaultCityRepository;
+import com.cst438.domain.DefaultCity;
 import com.cst438.domain.User;
 import com.cst438.domain.UserRepository;
+import com.cst438.domain.UserCityRepository;
+import com.cst438.domain.UserCity;
+import com.cst438.dto.CityDTO;
 import com.cst438.dto.UserDTO;
 
 @RestController
@@ -32,12 +37,22 @@ public class UserController {
 	
 	@Autowired
 	CoordinateRepository coordinateRepository;
+	
+	@Autowired
+	DefaultCityRepository defaultCityRepository;
+	
+	@Autowired
+	UserCityRepository userCityRepository;
 
 	// Methods:
 	// add a user
 	// get a user by email
 	// get list of all users
 	// get list of all coordinates
+	// get list of all default cities
+	// get home city
+	// get list of all user cities
+	// add a city to the user_cities table
 	
 	// Adds a user
 	@PostMapping("/user")
@@ -115,4 +130,42 @@ public class UserController {
         List<Coordinate> coordinates = (List<Coordinate>) coordinateRepository.findAll();
 	    return coordinates;
     }
+	
+	// Get List of DefaultCity
+	@GetMapping("/defaults")
+	public List<DefaultCity> getAllDefaults() {
+		List<DefaultCity> defaults = (List<DefaultCity>) defaultCityRepository.findAll();
+	    return defaults;
+	}
+	
+	//Get home city based on user's coords
+	
+	// Get List of UserCity
+	@GetMapping("/cities")
+	public List<UserCity> getAllUserCities() {
+		List<UserCity> userCities = (List<UserCity>) userCityRepository.findAll();
+	    return userCities;
+	}
+	
+	// Adds a city to the user_cities table
+	// Request Body needs a CityDTO
+	// Path Variable is a user_id
+	@PostMapping("/city/{user_id}")
+	public boolean addUserCity( @RequestBody CityDTO cityDto, @PathVariable int user_id) {
+		// see if the desired city is in the user_cities table
+		UserCity userCity = userCityRepository.findByCity(cityDto.city());
+		if(userCity != null) {
+			// if so then check if the city entry is registered to the user
+			if(userCity.getUser().getUser_id() == user_id) {
+				// return false if the user has already entered the city
+				return false;
+			}
+		}
+		
+		UserCity newUserCity = new UserCity();
+		// cityDto only has the city name and the country code
+		// we will need to obtain the latitude and longitude
+		// the same way we did in the addUser method
+		return true;
+	}
 }
