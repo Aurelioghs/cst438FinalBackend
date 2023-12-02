@@ -1,5 +1,6 @@
 package com.cst438.controller;
 
+import java.security.Principal;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -149,29 +150,32 @@ public class UserController {
 	
 	// Adds a city to the user_cities table
 	// Request Body needs a CityDTO
-	// Path Variable is a user_id
+	// Principal user holds the name of user and their password
 	@PostMapping("/city/{user_id}")
-	public boolean addUserCity( @RequestBody CityDTO cityDto, @PathVariable int user_id) {
-		// see if the desired city is in the user_cities table
-		UserCity userCity = userCityRepository.findByCity(cityDto.city());
-		if(userCity != null) {
-			// if so then check if the city entry is registered to the user
-			if(userCity.getUser().getUser_id() == user_id) {
-				// return false if the user has already entered the city
-				return false;
-			}
-		}
-		
-		// Set the user for newUserCity
-		// by getting the user based on the user_id
-		User cityUser = userRepository.findById(user_id);
-		if(cityUser == null) {
+	public boolean addUserCity( @RequestBody CityDTO cityDto, Principal user) {
+		// Grab the user from the user table
+		// by getting the user based on the name
+		User currentUser = userRepository.findByName(user.getName());
+		if(currentUser == null) {
 			// if for some reason the user does not exist
 			return false;
 		}
 		
+		// check the list of user cities that are linked to the user
+		// to see if the desired city is in the user_cities table
+		List<UserCity> userCities = userCityRepository.findAllByUser(currentUser.getUser_id());
+		if(userCities.size()!= 0) {
+			// if the user does have registered cities
+			// check to see if there is a city that matches the cityDto
+			for (UserCity city :userCities) {
+				if (city.getCity().equals(cityDto.city()) ) {
+					return false;
+				}
+			}
+		}
+		
 		UserCity newUserCity = new UserCity();
-		newUserCity.setUser(cityUser);
+		newUserCity.setUser(currentUser);
 		newUserCity.setCity(cityDto.city());
 		newUserCity.setCountry_code(cityDto.country_code());
 		// cityDto only has the city name and the country code
