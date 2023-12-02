@@ -51,6 +51,15 @@ public class UserController {
 	UserCityRepository userCityRepository;
 	
 	// Get List of DefaultCity
+	@GetMapping("/getuser")
+	public ResponseEntity<?> getUser(Principal user) {
+		System.out.println("USER IS AUTH");
+        String username = user.getName();
+        User currentUser = userRepository.findByName(username);
+    	System.out.println(currentUser);
+    	return new ResponseEntity<>(currentUser, HttpStatus.OK);
+	}
+	
 	@GetMapping("/defaultcities")
 	public List<DefaultCity> getAllDefaults() {
 		List<DefaultCity> defaults = (List<DefaultCity>) defaultCityRepository.findAll();
@@ -210,8 +219,10 @@ public class UserController {
     	System.out.println("Description: " + desc);
     	
     	int windSpeed= (int) Math.round(weather.getJSONObject("current").getDouble("wind_speed"));
+    	double windSpeedKph = Math.round(windSpeed * 3.60000288 * 10.0) / 10.0;
+		double windSpeedMph = Math.round(windSpeed *2.2369380816 * 10.0) / 10.0;
     	System.out.println(String.format("WindSpeed:%d ", windSpeed));
-    	WeatherDTO weatherdto = new WeatherDTO(city,Fahrenheit,Celsius,desc,windSpeed);
+    	WeatherDTO weatherdto = new WeatherDTO(city,Fahrenheit,Celsius,desc,windSpeedMph,windSpeedKph);
     	String message ="";	
     	message +=String.format("Weather for %s. F: %d. C:%d." ,city,Fahrenheit,Celsius);
     	message +=String.format("Description:%s. Wind Speed:%d.\n",desc,windSpeed );
@@ -263,8 +274,10 @@ public class UserController {
     	System.out.println("Description: " + desc);
     	
     	int  windSpeed= (int) Math.round(weather.getJSONObject("current").getDouble("wind_speed"));
+    	double windSpeedKph = Math.round(windSpeed * 3.60000288 * 10.0) / 10.0;
+		double windSpeedMph = Math.round(windSpeed *2.2369380816 * 10.0) / 10.0;
     	System.out.println(String.format("WindSpeed:%d ", windSpeed));
-    	WeatherDTO currentWeather = new WeatherDTO(currentUser.getCity(),Fahrenheit, Celsius, desc, windSpeed);
+    	WeatherDTO currentWeather = new WeatherDTO(currentUser.getCity(),Fahrenheit, Celsius, desc, windSpeedMph,windSpeedKph);
 
 		return ResponseEntity.ok(currentWeather);
 	
@@ -318,9 +331,11 @@ public class UserController {
 	    	int Fahrenheit =(int) Math.round((Kelvin - 273.15) * 9/5 + 32);
 	    	String desc= weather.getJSONObject("current").getJSONArray("weather").getJSONObject(0).getString("description");
 	    	int windSpeed= (int) Math.round(weather.getJSONObject("current").getDouble("wind_speed"));
+	    	double windSpeedKph = Math.round(windSpeed * 3.60000288 * 10.0) / 10.0;
+			double windSpeedMph = Math.round(windSpeed *2.2369380816 * 10.0) / 10.0;
 	    	message += String.format("Weather for %s, %s. F: %d. C:%d.", city.getCityName(), city.getCountryCode(), Fahrenheit, Celsius);
 	    	message += String.format(" Description:%s. Wind Speed:%d.\n", desc, windSpeed);
-	    	weathers[i++] = new WeatherDTO(city.getCityName(),Fahrenheit, Celsius, desc, windSpeed);
+	    	weathers[i++] = new WeatherDTO(city.getCityName(),Fahrenheit, Celsius, desc, windSpeedMph,windSpeedKph);
 	        }
 		 
 		 for (UserCity city :userCities) {
@@ -339,7 +354,9 @@ public class UserController {
 	    	int Fahrenheit =(int) Math.round((Kelvin - 273.15) * 9/5 + 32);
 	    	String desc= weather.getJSONObject("current").getJSONArray("weather").getJSONObject(0).getString("description");
 	    	int windSpeed= (int) Math.round(weather.getJSONObject("current").getDouble("wind_speed"));
-	    	weathers[i++] = new WeatherDTO(city.getCity(),Fahrenheit, Celsius, desc, windSpeed);
+	    	double windSpeedMph = Math.round(windSpeed * 3.60000288 * 10.0) / 10.0;
+			double windSpeedKph = Math.round(windSpeed *2.2369380816 * 10.0) / 10.0;
+	    	weathers[i++] = new WeatherDTO(city.getCity(),Fahrenheit, Celsius, desc, windSpeedMph,windSpeedKph);
 		 }
 	
 		return ResponseEntity.ok(weathers);
@@ -460,8 +477,8 @@ public class UserController {
 		//System.out.println("Description: " + desc);
 		
 		int windSpeed= (int) Math.round(weather.getJSONObject("current").getDouble("wind_speed"));
-		double windSpeedMph = Math.round(windSpeed * 3.60000288 * 10.0) / 10.0;
-		double windSpeedKph = Math.round(windSpeed *2.2369380816 * 10.0) / 10.0;
+		double windSpeedKph = Math.round(windSpeed * 3.60000288 * 10.0) / 10.0;
+		double windSpeedMph = Math.round(windSpeed *2.2369380816 * 10.0) / 10.0;
 		System.out.println(String.format("WindSpeed:%d  WindSpeedMph:%f   WindSpeedKph:%f ", windSpeed,windSpeedMph,windSpeedKph));
 		double feelsLikeK= weather.getJSONObject("current").getDouble("feels_like");
 		int feelsLikeC =(int) Math.round(feelsLikeK - 273.15);
