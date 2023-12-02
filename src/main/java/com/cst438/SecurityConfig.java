@@ -47,6 +47,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 		.antMatchers(HttpMethod.GET, "/defaults").permitAll()
 		.antMatchers(HttpMethod.GET, "/cities").permitAll()
 		.antMatchers(HttpMethod.POST, "/city/{user_id}").permitAll()
+		.antMatchers(HttpMethod.DELETE, "/user/{user_id}").permitAll()
 		.antMatchers(HttpMethod.GET, "/h2-console/**", "/favicon.ico").permitAll()
 		.antMatchers(HttpMethod.POST, "/h2-console/**").permitAll()
 		.anyRequest().authenticated().and()
