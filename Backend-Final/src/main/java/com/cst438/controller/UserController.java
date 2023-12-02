@@ -1,6 +1,8 @@
 package com.cst438.controller;
 
 import java.security.Principal;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -350,7 +352,7 @@ public class UserController {
 	// Request Body needs a CityDTO
 	// Path Variable is a user_id
 	@PostMapping("/addcity")
-	public boolean addUserCity(@RequestBody CityDTO cityDTO,Principal user ) {
+	public ResponseEntity<?> addUserCity(@RequestBody CityDTO cityDTO,Principal user ) {
 		// see if the desired city is in the user_cities table
 		System.out.println(cityDTO);
 		User currentUser = userRepository.findByName(user.getName());
@@ -358,7 +360,16 @@ public class UserController {
 		// by getting the user based on the user_id
 		if(currentUser == null) {
 			// if for some reason the user does not exist
-			return false;
+			  return new ResponseEntity<>("User not found", HttpStatus.NOT_FOUND);
+		}
+		
+		List<DefaultCity> defaultcities = (List<DefaultCity>) defaultCityRepository.findAll(); 
+		for (DefaultCity defaultCity:defaultcities) {
+			if (defaultCity.getCountryCode().equals(cityDTO.country_code()) ) {
+				if (defaultCity.getCityName().equals(cityDTO.city())) {
+					return new ResponseEntity<>("City already exists in the table", HttpStatus.BAD_REQUEST);
+				}
+			}
 		}
 		
 		List<UserCity> userCities = userCityRepository.findByUserId(currentUser.getId());//Find all cities related to user
@@ -369,7 +380,7 @@ public class UserController {
 			for (UserCity city :userCities) {
 			
 				if (city.getCity().equals(cityDTO.city()) ) {
-					return false;
+					  return new ResponseEntity<>("City already exists in the table", HttpStatus.BAD_REQUEST);
 				}
 			}
 			
@@ -409,7 +420,100 @@ public class UserController {
 		
 		//Finally save the newUserCity to the repository
 		userCityRepository.save(newUserCity);
-		return true;
+	    return new ResponseEntity<>("City added successfully", HttpStatus.OK);
 		}
 	
+	@GetMapping("/getmoredata/{city}")//Weather user sees based on their search
+	@CrossOrigin 
+	public  ResponseEntity<?> getMoreData(@PathVariable String city) {
+		String apiKey = "3c68fedb4d4cc2ee43ad218fedc95ec9";
+		String geoCodeEndpoint = "http://api.openweathermap.org/geo/1.0/direct?q=%s&appid=%s";
+		String geoUrl = String.format(geoCodeEndpoint, city, apiKey);
+		System.out.println("URL: "+ geoUrl);
+		RestTemplate restTemplate = new RestTemplate();
+		ResponseEntity<String> response = restTemplate.getForEntity(geoUrl, String.class);
+		String responseBody = response.getBody();
+	    responseBody = responseBody.substring(1, responseBody.length() - 1);
+		System.out.println("Response Body: " + responseBody);
+		JSONObject jo =new JSONObject(responseBody);
+		double lat = jo.getDouble("lat");
+		double lon = jo.getDouble("lon");
+		String coords = String.format("lat %f  lon %f", lat, lon); 
+		
+		System.out.println(coords);
+	 	String oneCallAPIEndpoint = "https://api.openweathermap.org/data/3.0/onecall?lat=%s&lon=%s&appid=%s";
+	  	String oneCallUrl = String.format(oneCallAPIEndpoint, String.valueOf(lat), String.valueOf(lon), apiKey);
+		System.out.println(oneCallUrl);
+	  	restTemplate = new RestTemplate();
+	  	response  = restTemplate.getForEntity(oneCallUrl, String.class);
+	 	//System.out.println(response.getBody());
+	 	JSONObject weather = new JSONObject(response.getBody());
+
+		double Kelvin = weather.getJSONObject("current").getDouble("temp");
+		int Celsius =(int) Math.round(Kelvin - 273.15);
+		int Fahrenheit =(int) Math.round((Kelvin - 273.15) * 9/5 + 32);
+
+		
+		//System.out.println(String.format("F: %d.  C:%d" ,Fahrenheit,Celsius));
+		
+		String desc= weather.getJSONObject("current").getJSONArray("weather").getJSONObject(0).getString("description");
+		//System.out.println("Description: " + desc);
+		
+		int windSpeed= (int) Math.round(weather.getJSONObject("current").getDouble("wind_speed"));
+		double windSpeedMph = Math.round(windSpeed * 3.60000288 * 10.0) / 10.0;
+		double windSpeedKph = Math.round(windSpeed *2.2369380816 * 10.0) / 10.0;
+		System.out.println(String.format("WindSpeed:%d  WindSpeedMph:%f   WindSpeedKph:%f ", windSpeed,windSpeedMph,windSpeedKph));
+		double feelsLikeK= weather.getJSONObject("current").getDouble("feels_like");
+		int feelsLikeC =(int) Math.round(feelsLikeK - 273.15);
+		int feelsLikeF =(int) Math.round((feelsLikeK - 273.15) * 9/5 + 32);
+		int humidity = weather.getJSONObject("current").getInt("humidity");
+		int cloudsPercent = weather.getJSONObject("current").getInt("clouds");
+		int visibilityM= weather.getJSONObject("current").getInt("visibility");
+		double visibilityKiloM = Math.round(visibilityM / 1000.0 * 10.0) / 10.0;
+		double visibilityMiles = Math.round(visibilityKiloM * 0.621371 * 10.0) / 10.0;
+		int sunrise= weather.getJSONObject("current").getInt("sunrise");
+		int sunset= weather.getJSONObject("current").getInt("sunset");
+		SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm");
+		Date dateSunrise = new Date(sunrise);
+		  System.out.println("Current Date Sunrise: " + dateSunrise);
+		String timeSunrise = timeFormat.format(dateSunrise);
+		Date dateSunset = new Date(sunset);
+		String timeSunset= timeFormat.format(dateSunset);
+	    System.out.println("Current Time Sunrise: " + timeSunrise);
+		//System.out.println(String.format("WindSpeed:%d ", windSpeed));
+		
+		System.out.println(String.format("Feels Like Temperature: %d", feelsLikeC));
+		System.out.println(String.format("Humidity: %d", humidity));
+		System.out.println(String.format("Clouds Percentage: %d", cloudsPercent));
+		System.out.println(String.format("Visibility kilometers: %f", visibilityKiloM));
+		System.out.println(String.format("Visibility miles: %f", visibilityMiles));
+		//WeatherDTO weatherdto = new WeatherDTO(city,Fahrenheit,Celsius,desc,windSpeed);
+		MoreWeatherInfoDTO weatherdto = new MoreWeatherInfoDTO(
+				Fahrenheit,
+				Celsius,
+				desc,
+				windSpeedMph,
+				windSpeedKph,
+			    feelsLikeF,
+			    feelsLikeC,
+			    humidity,
+			    cloudsPercent,
+			    visibilityMiles,
+			    visibilityKiloM,
+			    timeSunrise,
+			    timeSunset
+			);
+		String message ="";	
+		message +=String.format("Weather for %s. F: %d. C:%d." ,city,Fahrenheit,Celsius);
+		message +=String.format("Description:%s. Wind Speed:%d.\n",desc,windSpeed );
+		
+		//return weatherdto;
+		return ResponseEntity.ok(weatherdto);
+	}
+
+	
 }
+
+
+
+
