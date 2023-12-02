@@ -54,10 +54,10 @@ public class UserController {
 	// get home city [done]
 	// get list of all user cities [done]
 	// add a city to the user_cities table [done]
-	// delete a user
-	// add a city to the default city table
-	// delete a city from the default city table
-	// delete a city from user city table
+	// delete a user [done]
+	// add a city to the default city table [done]
+	// delete a city from the default city table [done]
+	// delete a city from user city table [done]
 	// update the address of the user
 	
 	// Adds a user
@@ -244,5 +244,126 @@ public class UserController {
             return true;
         }
         return false;
+	}
+	
+	// Adds a city to the default city table
+	// Request Body needs a CityDTO
+	@PostMapping("/default")
+	@Transactional
+	public boolean addDefaultCity( @RequestBody CityDTO cityDto ) {
+		// check the list of default cities
+		// to see if the desired city is in the default_cities table
+		List<DefaultCity> defaults = (List<DefaultCity>) defaultCityRepository.findAll();
+		if(defaults.size()!= 0) {
+			// if there are default cities
+			// check to see if there is a city that matches the cityDto
+			for (DefaultCity city :defaults) {
+				if (city.getCity().equals(cityDto.city()) ) {
+					return false;
+				}
+			}
+		}
+		
+		// Set city and country_code from cityDto
+		DefaultCity newDefault = new DefaultCity();
+		newDefault.setCity(cityDto.city());
+		newDefault.setCountry_code(cityDto.country_code());
+		
+		// we will need to obtain the latitude and longitude
+		// the same way we did in the addUser method
+		String apiKey = "3c68fedb4d4cc2ee43ad218fedc95ec9"; // WeatherApp API Key
+		String cityName = newDefault.getCity();
+		String countryCode = newDefault.getCountry_code();
+		String geoCodeEndpoint = "http://api.openweathermap.org/geo/1.0/direct?q=%s,%s&appid=%s";						
+		String geoUrl = String.format(geoCodeEndpoint, cityName, countryCode, apiKey);
+				
+		// Create instance of RestTemplate for the HTTP Request
+		RestTemplate restTemplate = new RestTemplate();
+		// Perform a GET request to geoUrl
+		// The response should be a String
+		ResponseEntity<String> response = restTemplate.getForEntity(geoUrl, String.class);
+		String responseBody = response.getBody();
+		System.out.println("Response Body: " + responseBody);
+						
+		// Get lat and lon from JSON Object
+		JSONArray jsonArray = new JSONArray(responseBody);
+		JSONObject jo = jsonArray.getJSONObject(0);
+		float lat = jo.getFloat("lat");
+		float lon = jo.getFloat("lon");		
+		
+		// Add lat and lon to the newUserCity
+		newDefault.setLatitude(lat);
+		newDefault.setLongitude(lon);
+				
+		//Finally save the newUserCity to the repository
+		defaultCityRepository.save(newDefault);
+		return true;
+	}
+	
+	// Deletes a city from the default city table
+	@DeleteMapping("/default/{city_name}")
+	@Transactional
+	public boolean deleteDefault(@PathVariable String city_name) {
+		// default_cities table should not have any duplicate city names
+		List<DefaultCity> defaults = (List<DefaultCity>) defaultCityRepository.findAll();
+		if(defaults.size()== 0) {
+			// if there are no default cities
+			return false;
+		}
+		// look through all the default cities
+		// to find the city that matches
+		for (DefaultCity city :defaults) {
+			if (city.getCity().equals(city_name) ) {
+				if (defaultCityRepository.existsById(city.getCity_id())) {
+					// here we actually delete the default city
+					System.out.println("Deleting " + city.getCity());
+					defaultCityRepository.deleteById(city.getCity_id());
+		            return true;
+		        }
+			}
+		}
+		
+		// if we reach here, that means that there are default cities
+		// but the city we wanted to delete was not in the list
+		return false;
+	}
+	
+	// Deletes a city from user city table
+	// Handles the same as deleteDefault()
+	// Except we need to findAllByUser rather than findAll
+	@DeleteMapping("/city/{city_name}")
+	@Transactional
+	public boolean deleteUserCity(@PathVariable String city_name, Principal user) {
+		// get the user from the Principal
+		User currentUser = userRepository.findByName(user.getName());
+		if(currentUser == null) {
+			// if for some reason the user does not exist
+			return false;
+		}
+		
+		// user_cities table can have duplicate city names
+		// but a user should not have duplicate cities attached to them
+		List<UserCity> userCities = userCityRepository.findAllByUser(currentUser.getUser_id());
+		if(userCities.size()== 0) {
+			// if there are no cities that the user has added
+			return false;
+		}
+		
+		// look through all the user cities
+		// to find the city that matches
+		for (UserCity city :userCities) {
+			if (city.getCity().equals(city_name) ) {
+				if (userCityRepository.existsById(city.getCity_id())) {
+					// here we actually delete the user city
+					System.out.println("Deleting " + city.getCity());
+					userCityRepository.deleteById(city.getCity_id());
+					return true;
+				}
+			}
+		}
+				
+		// if we reach here, that means that there are user cities
+		// but the city we wanted to delete was not in the list
+		return false;
 	}
 }
