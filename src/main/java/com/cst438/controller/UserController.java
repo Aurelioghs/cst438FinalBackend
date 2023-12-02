@@ -46,14 +46,19 @@ public class UserController {
 	UserCityRepository userCityRepository;
 
 	// Methods:
-	// add a user
-	// get a user by email
-	// get list of all users
-	// get list of all coordinates
-	// get list of all default cities
-	// get home city
-	// get list of all user cities
-	// add a city to the user_cities table
+	// add a user [done]
+	// get a user by email [done]
+	// get list of all users [done]
+	// get list of all coordinates [done]
+	// get list of all default cities [done]
+	// get home city [done]
+	// get list of all user cities [done]
+	// add a city to the user_cities table [done]
+	// delete a user
+	// add a city to the default city table
+	// delete a city from the default city table
+	// delete a city from user city table
+	// update the address of the user
 	
 	// Adds a user
 	@PostMapping("/user")
@@ -152,6 +157,7 @@ public class UserController {
 	// Request Body needs a CityDTO
 	// Principal user holds the name of user and their password
 	@PostMapping("/city/{user_id}")
+	@Transactional
 	public boolean addUserCity( @RequestBody CityDTO cityDto, Principal user) {
 		// Grab the user from the user table
 		// by getting the user based on the name
@@ -209,5 +215,34 @@ public class UserController {
 		//Finally save the newUserCity to the repository
 		userCityRepository.save(newUserCity);
 		return true;
+	}
+	
+	// Deletes a user
+	@DeleteMapping("/user/{user_id}")
+	@Transactional
+	public boolean deleteUser(@PathVariable int user_id) {
+		// Before a user is deleted, we must delete:
+		// The Coordinate associated to the user in the coords table
+		// The UserCity[s] associated to the user in the user_cities table
+		List<Coordinate> coordinates = coordinateRepository.findAllByUser(user_id);
+		for (Coordinate coordinate : coordinates) {
+	        if (coordinateRepository.existsById(coordinate.getCoord_id())) {
+	        	coordinateRepository.deleteById(coordinate.getCoord_id());
+	        }
+	    }
+		
+		List<UserCity> userCities = userCityRepository.findAllByUser(user_id);
+		for (UserCity userCity : userCities) {
+	        if (userCityRepository.existsById(userCity.getCity_id())) {
+	        	userCityRepository.deleteById(userCity.getCity_id());
+	        }
+	    }
+		
+		// At this point all Coordinate and UserCity associated to the user should be deleted
+		if (userRepository.existsById(user_id)) {
+			userRepository.deleteById(user_id);
+            return true;
+        }
+        return false;
 	}
 }
