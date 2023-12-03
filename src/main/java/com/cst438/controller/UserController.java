@@ -58,7 +58,7 @@ public class UserController {
 	// add a city to the default city table [done]
 	// delete a city from the default city table [done]
 	// delete a city from user city table [done]
-	// update the address of the user
+	// update the address of the user [done]
 	
 	// Adds a user
 	@PostMapping("/user")
@@ -365,5 +365,68 @@ public class UserController {
 		// if we reach here, that means that there are user cities
 		// but the city we wanted to delete was not in the list
 		return false;
+	}
+	
+	// Updates the address of the user
+	@PutMapping("/address")
+	@Transactional
+	public boolean updateUserAddress( @RequestBody CityDTO cityDto, Principal user ) {
+		// First get the user
+		User currentUser = userRepository.findByName(user.getName());
+		if(currentUser == null) {
+			// if for some reason the user does not exist
+			return false;
+		}
+		
+		// Check that the new city is different from the old one
+		if(currentUser.getCity() == cityDto.city()) {
+			if(currentUser.getCountry_code() == cityDto.country_code()) {
+				if(currentUser.getState_code() == cityDto.state_code()) {
+					return false;
+				}
+			}
+		}
+		
+		// Check that there is only one Coordinate attached to the user
+		List<Coordinate> coordinate = coordinateRepository.findAllByUser(currentUser.getUser_id());
+		if(coordinate.size() != 1) {
+			return false;
+		}
+		
+		// Change the User's city, state_code, and country_code
+		currentUser.setCity(cityDto.city());
+		currentUser.setState_code(cityDto.state_code());
+		currentUser.setCountry_code(cityDto.country_code());
+		// Save changed user to repository
+		userRepository.save(currentUser);
+		
+		// Now we can update the Coordinate
+		String apiKey = "3c68fedb4d4cc2ee43ad218fedc95ec9"; // WeatherApp API Key
+		String cityName = currentUser.getCity();
+		String stateCode = currentUser.getState_code();
+		String countryCode = currentUser.getCountry_code();
+		String geoCodeEndpoint = "http://api.openweathermap.org/geo/1.0/direct?q=%s,%s,%s&appid=%s";						
+		String geoUrl = String.format(geoCodeEndpoint, cityName, stateCode, countryCode, apiKey);
+				
+		// Create instance of RestTemplate for the HTTP Request
+		RestTemplate restTemplate = new RestTemplate();
+		// Perform a GET request to geoUrl
+		// The response should be a String
+		ResponseEntity<String> response = restTemplate.getForEntity(geoUrl, String.class);
+		String responseBody = response.getBody();
+		System.out.println("Response Body: " + responseBody);
+				
+		// Get lat and lon from JSON Object
+		JSONArray jsonArray = new JSONArray(responseBody);
+		JSONObject jo = jsonArray.getJSONObject(0);
+		float lat = jo.getFloat("lat");
+		float lon = jo.getFloat("lon");
+		
+		Coordinate location = coordinate.get(0);
+		location.setUser(currentUser);
+		location.setLon(lon);
+		location.setLat(lat);
+		coordinateRepository.save(location);
+		return true;
 	}
 }
