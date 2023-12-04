@@ -10,4 +10,7 @@ import org.springframework.data.repository.query.Param;
 public interface CoordsRepository extends CrudRepository<Coords, Integer>{
 	 @Query("SELECT c FROM Coords c WHERE c.user.user_id = :userId")
 	    Coords findByUserId(@Param("userId") int userId);
+	 
+	 @Query("SELECT c FROM Coords c WHERE c.user.user_id = :userId")
+		List<Coords> findAllByUserId(@Param("userId") int userId);
 }

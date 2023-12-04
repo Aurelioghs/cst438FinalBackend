@@ -20,9 +20,11 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
@@ -544,8 +546,73 @@ public class UserController {
 			// but the city we wanted to delete was not in the list
 			return false;
 		}
+
+// Updates the address of the user
+@PutMapping("/address")
+@CrossOrigin
+public boolean updateUserAddress( @RequestBody CityDTO cityDto, Principal user ) {
+	// First get the user
+	User currentUser = userRepository.findByName(user.getName());
+	if(currentUser == null) {
+		// if for some reason the user does not exist
+		return false;
+	}
 	
+	// Check that the new city is different from the old one
+	if(currentUser.getCity().equals(cityDto.city()) ) {
+		
+		if(currentUser.getCountryCode().equals(cityDto.country_code())) {
+			if(currentUser.getStateCode().equals(cityDto.state_code()) ) {
+				return false;
+			}
+		}
+	}
+	
+	// Check that there is only one Coordinate attached to the user
+	List<Coords> coordinate = coordsRepository.findAllByUserId(currentUser.getId());
+	if(coordinate.size() != 1) {
+		return false;
+	}
+	
+	// Change the User's city, state_code, and country_code
+	currentUser.setCity(cityDto.city());
+	currentUser.setStateCode(cityDto.state_code());
+	currentUser.setCountryCode(cityDto.country_code());
+	// Save changed user to repository
+	userRepository.save(currentUser);
+	
+	// Now we can update the Coordinate
+	String apiKey = "3c68fedb4d4cc2ee43ad218fedc95ec9"; // WeatherApp API Key
+	String cityName = currentUser.getCity();
+	String stateCode = currentUser.getStateCode();
+	String countryCode = currentUser.getCountryCode();
+	String geoCodeEndpoint = "http://api.openweathermap.org/geo/1.0/direct?q=%s,%s,%s&appid=%s";						
+	String geoUrl = String.format(geoCodeEndpoint, cityName, stateCode, countryCode, apiKey);
+			
+	// Create instance of RestTemplate for the HTTP Request
+	RestTemplate restTemplate = new RestTemplate();
+	// Perform a GET request to geoUrl
+	// The response should be a String
+	ResponseEntity<String> response = restTemplate.getForEntity(geoUrl, String.class);
+	String responseBody = response.getBody();
+	System.out.println("Response Body: " + responseBody);
+			
+	// Get lat and lon from JSON Object
+	JSONArray jsonArray = new JSONArray(responseBody);
+	JSONObject jo = jsonArray.getJSONObject(0);
+	float lat = jo.getFloat("lat");
+	float lon = jo.getFloat("lon");
+	
+	Coords location = coordinate.get(0);
+	location.setUser(currentUser);
+	location.setLon(lon);
+	location.setLat(lat);
+	coordsRepository.save(location);
+	return true;
 }
+}
+
+
 
 
 

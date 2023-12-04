@@ -8,8 +8,8 @@ INSERT INTO user_cities (user_id,city_name, country_code, latitude, longitude)
 VALUES 
     (1,'Miami', 'US', 25.7742, -80.1936),
     (1,'San Diego', 'US',32.7174,-117.1628),
-    (2,'Seattle', 'US', 47.6038, -122.3301),
-    (2,'Toronto', 'CAN', 43.6535, -79.3839);
+    (3,'Seattle', 'US', 47.6038, -122.3301),
+    (3,'Toronto', 'CAN', 43.6535, -79.3839);
     
 INSERT INTO default_cities (city_name, country_code, latitude, longitude)
 VALUES 
