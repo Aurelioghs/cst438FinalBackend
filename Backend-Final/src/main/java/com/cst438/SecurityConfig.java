@@ -47,6 +47,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 		.antMatchers(HttpMethod.GET, "/getcoords/**").permitAll()
 		.antMatchers(HttpMethod.GET, "/getcities/**").permitAll()
 		.antMatchers(HttpMethod.GET, "/getusers").permitAll()
+		.antMatchers(HttpMethod.DELETE, "/user/{user_id}").permitAll()
+		.antMatchers(HttpMethod.POST, "/default").permitAll()
 		.antMatchers(HttpMethod.GET, "/getweathers").permitAll()
 		.antMatchers(HttpMethod.GET, "/getuserweather").permitAll()
 		.antMatchers(HttpMethod.GET, "/h2-console/**", "/favicon.ico").permitAll()

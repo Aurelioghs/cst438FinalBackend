@@ -5,8 +5,8 @@ create table user_table (
 	password varchar(100), 
 	role varchar(25),
 	city varchar(32),
-	statecode varchar(2),
-	countrycode varchar(2)
+	statecode varchar(3),
+	countrycode varchar(3)
 );
 
 CREATE TABLE coords (
@@ -21,7 +21,7 @@ CREATE TABLE coords (
 CREATE TABLE default_cities (
  	city_id INT PRIMARY KEY AUTO_INCREMENT,
     city_name VARCHAR(255),
-    country_code CHAR(2),
+    country_code CHAR(3),
     latitude FLOAT,
     longitude FLOAT
 );
@@ -30,7 +30,7 @@ CREATE TABLE user_cities (
 	city_id int NOT NULL AUTO_INCREMENT,
 	user_id int NOT NULL,
 	city_name varchar(255) NOT NULL,
-	country_code varchar(2) NOT NULL,
+	country_code varchar(3) NOT NULL,
 	latitude FLOAT NOT NULL,
 	longitude FLOAT NOT NULL,
 	PRIMARY KEY (city_id),

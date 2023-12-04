@@ -1,12 +1,15 @@
 insert into user_table
 (name, email,password, role,city,statecode,countrycode) values 
-('user','user@csumb.edu','$2a$10$NVM0n8ElaRgg7zWO1CxUdei7vWoPg91Lz2aYavh9.f9q0e4bRadue','USER','Martinez','CA','US'),
+('user','user@csumb.edu','$2a$10$NVM0n8ElaRgg7zWO1CxUdei7vWoPg91Lz2aYavh9.f9q0e4bRadue','USER','San Francisco','CA','US'),
+('user2','user2@csumb.edu','$2a$10$NVM0n8ElaRgg7zWO1CxUdei7vWoPg91Lz2aYavh9.f9q0e4bRadue','USER','Los Angeles','CA','US'),
 ('admin','admin@csumb.edu','$2a$10$8cjz47bjbR4Mn8GMg9IZx.vyjhLXR/SKKMSZ9.mP9vpMu0ssKi8GW','ADMIN','Monterey','CA','US');
 
 INSERT INTO user_cities (user_id,city_name, country_code, latitude, longitude)
 VALUES 
     (1,'Miami', 'US', 25.7742, -80.1936),
-    (2,'Seattle', 'US', 47.6038, -122.3301);
+    (1,'San Diego', 'US',32.7174,-117.1628),
+    (2,'Seattle', 'US', 47.6038, -122.3301),
+    (2,'Toronto', 'CAN', 43.6535, -79.3839);
     
 INSERT INTO default_cities (city_name, country_code, latitude, longitude)
 VALUES 
@@ -22,4 +25,5 @@ VALUES
    
 INSERT INTO coords (user_id, lat, lon) VALUES
   (1, 38.0139, -122.1339), 
-  (2, 36.6003, -121.8946); 
+  (2, 34.0537,-118.2428),
+  (3, 36.6003, -121.8946); 

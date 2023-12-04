@@ -1,4 +1,5 @@
 package com.cst438.domain;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -12,8 +13,8 @@ public class DefaultCity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long cityId;
-
-    private String cityName;
+    @Column(name = "city_name") // Update to match the actual column name in the database
+    private String city;
     private String countryCode;
     private double latitude;
     private double longitude;
@@ -24,7 +25,7 @@ public class DefaultCity {
 
     // Constructor without cityId (useful for creating instances without an ID, e.g., when inserting new records)
     public DefaultCity(String cityName, String countryCode, double latitude, double longitude) {
-        this.cityName = cityName;
+        this.city = cityName;
         this.countryCode = countryCode;
         this.latitude = latitude;
         this.longitude = longitude;
@@ -36,12 +37,12 @@ public class DefaultCity {
         return cityId;
     }
 
-    public String getCityName() {
-        return cityName;
+    public String getCity() {
+        return city;
     }
 
-    public void setCityName(String cityName) {
-        this.cityName = cityName;
+    public void setCity(String cityName) {
+        this.city= cityName;
     }
 
     public String getCountryCode() {
@@ -70,7 +71,7 @@ public class DefaultCity {
 
 	@Override
 	public String toString() {
-		return "Cities [cityId=" + cityId + ", cityName=" + cityName + ", countryCode=" + countryCode + ", latitude="
+		return "Cities [cityId=" + cityId + ", cityName=" + city + ", countryCode=" + countryCode + ", latitude="
 				+ latitude + ", longitude=" + longitude + "]";
 	}
     

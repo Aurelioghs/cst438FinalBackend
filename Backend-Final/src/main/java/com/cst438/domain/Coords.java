@@ -21,7 +21,15 @@ public class Coords {
     private double lon;
     
     
-    public int getUserId() {
+    public int getCoord_id() {
+		return coord_id;
+	}
+
+	public void setCoord_id(int coord_id) {
+		this.coord_id = coord_id;
+	}
+
+	public int getUserId() {
         return user.getId();
     }
 

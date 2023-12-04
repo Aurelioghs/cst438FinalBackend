@@ -17,7 +17,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -50,7 +52,6 @@ public class UserController {
 	@Autowired
 	UserCityRepository userCityRepository;
 	
-	// Get List of DefaultCity
 	@GetMapping("/getuser")
 	public ResponseEntity<?> getUser(Principal user) {
 		System.out.println("USER IS AUTH");
@@ -60,44 +61,19 @@ public class UserController {
     	return new ResponseEntity<>(currentUser, HttpStatus.OK);
 	}
 	
-	@GetMapping("/defaultcities")
-	public List<DefaultCity> getAllDefaults() {
-		List<DefaultCity> defaults = (List<DefaultCity>) defaultCityRepository.findAll();
-	    return defaults;
-	}
 	
 	//Get home city based on user's coords
-	
 	// Get List of UserCity
 	@GetMapping("/usercities")
-	public List<UserCity> getAllUserCities() {
-		List<UserCity> userCities = (List<UserCity>) userCityRepository.findAll();
+	public List<UserCity> getAllUserCities( Principal user) {
+		 String username = user.getName();
+	     User currentUser = userRepository.findByName(username);
+		List<UserCity> userCities = (List<UserCity>) userCityRepository.findAllByUserId(currentUser.getId());
 	    return userCities;
 	}
 	
 	  
-	@GetMapping("/getusers")//get users to confirm sign up
-	@CrossOrigin 
-	public ResponseEntity<?> getAll() {
-		Iterable<User> users = userRepository.findAll();
-		String message = "";
-		for (User user :users) {
-			System.out.println(user);
-			message+=(user.toString());
-			message+=("\n");
-	    }
-	  
-	    return ResponseEntity.ok(message.toString());
-	}
-	
-	// Get List of Coordinates
-	@GetMapping("/getcoords")
-    public List<Coords> getAllCoordinates() {
-        List<Coords> coordinates = (List<Coords>) coordsRepository.findAll();
-	    return coordinates;
-    }
-	
-	@PostMapping("/signup")
+	@PostMapping("/signup")//same as addUser
 	@CrossOrigin 
 	public ResponseEntity<?> signUp(@RequestBody UserDTO user) {
 		System.out.println("INIDE SIGN UP");
@@ -311,7 +287,7 @@ public class UserController {
    
     	String username = user.getName();
 	    User currentUser = userRepository.findByName(username);
-		List<UserCity> userCities = userCityRepository.findByUserId(currentUser.getId());
+		List<UserCity> userCities = userCityRepository.findAllByUserId(currentUser.getId());
     	WeatherDTO[] weathers = new WeatherDTO[defaultCities.size() + userCities.size()];
       	int i = 0;
       	String message ="";
@@ -333,9 +309,9 @@ public class UserController {
 	    	int windSpeed= (int) Math.round(weather.getJSONObject("current").getDouble("wind_speed"));
 	    	double windSpeedKph = Math.round(windSpeed * 3.60000288 * 10.0) / 10.0;
 			double windSpeedMph = Math.round(windSpeed *2.2369380816 * 10.0) / 10.0;
-	    	message += String.format("Weather for %s, %s. F: %d. C:%d.", city.getCityName(), city.getCountryCode(), Fahrenheit, Celsius);
+	    	message += String.format("Weather for %s, %s. F: %d. C:%d.", city.getCity(), city.getCountryCode(), Fahrenheit, Celsius);
 	    	message += String.format(" Description:%s. Wind Speed:%d.\n", desc, windSpeed);
-	    	weathers[i++] = new WeatherDTO(city.getCityName(),Fahrenheit, Celsius, desc, windSpeedMph,windSpeedKph);
+	    	weathers[i++] = new WeatherDTO(city.getCity(),Fahrenheit, Celsius, desc, windSpeedMph,windSpeedKph);
 	        }
 		 
 		 for (UserCity city :userCities) {
@@ -358,6 +334,8 @@ public class UserController {
 			double windSpeedKph = Math.round(windSpeed *2.2369380816 * 10.0) / 10.0;
 	    	weathers[i++] = new WeatherDTO(city.getCity(),Fahrenheit, Celsius, desc, windSpeedMph,windSpeedKph);
 		 }
+		 
+	
 	
 		return ResponseEntity.ok(weathers);
 		
@@ -383,13 +361,13 @@ public class UserController {
 		List<DefaultCity> defaultcities = (List<DefaultCity>) defaultCityRepository.findAll(); 
 		for (DefaultCity defaultCity:defaultcities) {
 			if (defaultCity.getCountryCode().equals(cityDTO.country_code()) ) {
-				if (defaultCity.getCityName().equals(cityDTO.city())) {
+				if (defaultCity.getCity().equals(cityDTO.city())) {
 					return new ResponseEntity<>("City already exists in the table", HttpStatus.BAD_REQUEST);
 				}
 			}
 		}
 		
-		List<UserCity> userCities = userCityRepository.findByUserId(currentUser.getId());//Find all cities related to user
+		List<UserCity> userCities = userCityRepository.findAllByUserId(currentUser.getId());//Find all cities related to user
 		System.out.println(userCities);
 		if(userCities.size()!= 0) {
 			// if so then check if the city entry is registered to the user
@@ -528,6 +506,44 @@ public class UserController {
 		return ResponseEntity.ok(weatherdto);
 	}
 
+	// Deletes a city from user city table
+		// Handles the same as deleteDefault()
+		// Except we need to findAllByUser rather than findAll
+		@DeleteMapping("/city/{city_name}")
+		@CrossOrigin
+		public boolean deleteUserCity(@PathVariable String city_name, Principal user) {
+			// get the user from the Principal
+			User currentUser = userRepository.findByName(user.getName());
+			if(currentUser == null) {
+				// if for some reason the user does not exist
+				return false;
+			}
+			
+			// user_cities table can have duplicate city names
+			// but a user should not have duplicate cities attached to them
+			List<UserCity> userCities = userCityRepository.findAllByUserId(currentUser.getId());
+			if(userCities.size()== 0) {
+				// if there are no cities that the user has added
+				return false;
+			}
+			
+			// look through all the user cities
+			// to find the city that matches
+			for (UserCity city :userCities) {
+				if (city.getCity().equals(city_name) ) {
+					if (userCityRepository.existsById(city.getCity_id())) {
+						// here we actually delete the user city
+						System.out.println("Deleting " + city.getCity());
+						userCityRepository.deleteById(city.getCity_id());
+						return true;
+					}
+				}
+			}
+					
+			// if we reach here, that means that there are user cities
+			// but the city we wanted to delete was not in the list
+			return false;
+		}
 	
 }
 
