@@ -332,8 +332,8 @@ public class UserController {
 	    	int Fahrenheit =(int) Math.round((Kelvin - 273.15) * 9/5 + 32);
 	    	String desc= weather.getJSONObject("current").getJSONArray("weather").getJSONObject(0).getString("description");
 	    	int windSpeed= (int) Math.round(weather.getJSONObject("current").getDouble("wind_speed"));
-	    	double windSpeedMph = Math.round(windSpeed * 3.60000288 * 10.0) / 10.0;
-			double windSpeedKph = Math.round(windSpeed *2.2369380816 * 10.0) / 10.0;
+	    	double windSpeedKph = Math.round(windSpeed * 3.60000288 * 10.0) / 10.0;
+			double windSpeedMph = Math.round(windSpeed *2.2369380816 * 10.0) / 10.0;
 	    	weathers[i++] = new WeatherDTO(city.getCity(),Fahrenheit, Celsius, desc, windSpeedMph,windSpeedKph);
 		 }
 		 
