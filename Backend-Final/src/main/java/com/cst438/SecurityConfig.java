@@ -41,23 +41,14 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 		.sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
 		.authorizeRequests()
 		.antMatchers(HttpMethod.POST, "/login").permitAll()
-		.antMatchers(HttpMethod.GET, "/test").permitAll()
-		.antMatchers(HttpMethod.POST, "/signup").permitAll()
-		.antMatchers(HttpMethod.GET, "/getweather/**").permitAll()
-		.antMatchers(HttpMethod.GET, "/getcoords/**").permitAll()
-		.antMatchers(HttpMethod.GET, "/getcities/**").permitAll()
-		.antMatchers(HttpMethod.GET, "/getusers").permitAll()
-		.antMatchers(HttpMethod.DELETE, "/user/{user_id}").permitAll()
-		.antMatchers(HttpMethod.POST, "/default").permitAll()
-		.antMatchers(HttpMethod.GET, "/getweathers").permitAll()
-		.antMatchers(HttpMethod.GET, "/getuserweather").permitAll()
 		.antMatchers(HttpMethod.GET, "/h2-console/**", "/favicon.ico").permitAll()
 		.antMatchers(HttpMethod.POST, "/h2-console/**").permitAll()
 		.anyRequest().authenticated().and()
 		.exceptionHandling()
 		.authenticationEntryPoint(exceptionHandler).and()
 		.addFilterBefore(authenticationFilter, 
-				UsernamePasswordAuthenticationFilter.class);
+				UsernamePasswordAuthenticationFilter.class)
+		.headers().frameOptions().sameOrigin();
 	}	
 
 	@Bean

@@ -22,7 +22,13 @@
     <artifactId>json</artifactId>
     <version>20231013</version>
 </dependency>
-		
+<!-- for my-sql connector-j dependecies -->
+		<dependency>
+			<groupId>com.mysql</groupId>
+			<artifactId>mysql-connector-j</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+		<!-- For my-sql connector-j dependecies -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
@@ -48,7 +54,7 @@
 			<scope>runtime</scope>
 		</dependency>
 		<!-- for rabbitmq -->
-		<dependency>
+		<!-- <dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-amqp</artifactId>
 		</dependency>
@@ -56,7 +62,7 @@
 			<groupId>org.springframework.amqp</groupId>
 			<artifactId>spring-rabbit-test</artifactId>
 			<scope>runtime</scope>
-		</dependency>
+		</dependency> -->
 		<!-- end rabbitmq -->
 		<!-- for selenium -->
 		<dependency>
